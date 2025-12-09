@@ -1,0 +1,39 @@
+# Node modules (frontend)
+frontend/node_modules/
+
+# Log files
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Dependency directories (backend, PHP dependencies)
+backend/vendor/
+backend/node_modules/
+
+# Build output
+frontend/.next/
+frontend/public/
+frontend/.env.local
+
+# Frontend build artifacts
+frontend/.env.local.example
+frontend/next-env.d.ts
+
+# Configuration files that are environment specific (like composer.lock)
+backend/.env
+backend/.env.local
+backend/.env.production
+
+# PHPUnit results
+backend/phpunit.xml
+
+# IDE/editor config
+.vscode/
+.idea/
+
+# Miscellaneous
+*.swp
+*.bak
+*.tmp
