@@ -113,12 +113,20 @@ const InfoPointPage = () => {
           <>
             <h1 className={styles.heroTitle}>Info Point AI</h1>
             <p className={styles.heroText}>
-              Scopri il programma dell&apos;evento e fai domande al nostro assistente
-              AI. Premi il simbolo oppure il pulsante per iniziare.
+              Scopri l&apos;evento e fai domande al nostro assistente AI.
+              <br />
+              Premi il simbolo per iniziare la conversazione.
             </p>
             <div className={styles.heroSpacer} aria-hidden="true" />
-            <p className={styles.heroStatus}>Pronto ad assisterti in ogni momento.</p>
           </>
+        )}
+        {assistantStarted && (
+          <div className={styles.quickActions}>
+            <span>Azioni rapide</span>
+            <button type="button" className={styles.agendaButton}>
+              Consulta l&apos;agenda
+            </button>
+          </div>
         )}
         <section
           className={`${styles.chatShell} ${
@@ -171,6 +179,14 @@ const InfoPointPage = () => {
       >
         i
       </button>
+      {!assistantStarted && (
+        <div className={styles.secondaryActions}>
+          <p className={styles.altLabel}>Altrimenti:</p>
+          <button type="button" className={styles.agendaButton}>
+            Consulta l&apos;agenda
+          </button>
+        </div>
+      )}
 
       <div
         className={`${styles.bottomDock} ${
