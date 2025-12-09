@@ -109,20 +109,14 @@ const InfoPointPage = () => {
         <h1>Info Point AI</h1>
       </header>
       <div className={heroClasses}>
-        {!hasConversation && (
-          <>
-            <h1 className={styles.heroTitle}>Info Point AI</h1>
-            <p className={styles.heroText}>
-              Scopri l&apos;evento e fai domande al nostro assistente AI.
-              <br />
-              Premi il simbolo per iniziare la conversazione.
-            </p>
-            <div className={styles.heroSpacer} aria-hidden="true" />
-          </>
-        )}
+        <h1 className={styles.heroTitle}>Info Point AI</h1>
+        <p className={styles.heroText}>
+          {assistantStarted
+            ? "Chiedi qualcosa al nostro assistente AI. Inserisci la tua domanda qui sotto e premi invio."
+            : "Scopri l'evento e fai domande al nostro assistente AI. Premi il simbolo per iniziare la conversazione."}
+        </p>
         {assistantStarted && (
           <div className={styles.quickActions}>
-            <span>Azioni rapide</span>
             <button type="button" className={styles.agendaButton}>
               Consulta l&apos;agenda
             </button>
