@@ -1,0 +1,116 @@
+/* [project]/src/styles/infopoint.css [client] (css) */
+:root {
+  color: #0f172a;
+  background-color: #f8fafc;
+  font-family: Inter, Segoe UI, system-ui, -apple-system, BlinkMacSystemFont, Helvetica Neue, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+.infopoint-page {
+  background: radial-gradient(circle at top, #e0f2fe 0%, #f8fafc 55%, #fff 100%);
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 32px 16px;
+  display: flex;
+}
+
+.infopoint-card {
+  text-align: center;
+  background: #fff;
+  border-radius: 28px;
+  flex-direction: column;
+  gap: 24px;
+  width: min(440px, 100%);
+  padding: 48px 36px;
+  display: flex;
+  box-shadow: 0 25px 65px #0f172a14;
+}
+
+.infopoint-symbol {
+  color: #0f172a;
+  cursor: pointer;
+  background: linear-gradient(#e0f2fe 0%, #bfdbfe 100%);
+  border: 3px solid #0ea5e9;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto;
+  font-size: 88px;
+  font-weight: 600;
+  line-height: 1;
+  transition: transform .2s, box-shadow .2s;
+  display: flex;
+  box-shadow: 0 18px 35px #0ea5e94d;
+}
+
+.infopoint-symbol:hover, .infopoint-symbol:focus-visible {
+  transform: scale(1.04);
+  box-shadow: 0 22px 40px #0ea5e966;
+}
+
+.infopoint-symbol:focus {
+  outline: none;
+}
+
+.infopoint-text {
+  color: #0f172a;
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.infopoint-action {
+  color: #fff;
+  cursor: pointer;
+  background: #0ea5e9;
+  border: none;
+  border-radius: 999px;
+  padding: 14px 32px;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: transform .15s, box-shadow .15s, background .15s;
+}
+
+.infopoint-action:hover, .infopoint-action:focus-visible {
+  background: #0284c7;
+  transform: translateY(-2px);
+  box-shadow: 0 15px 30px #0284c74d;
+}
+
+.infopoint-action:focus {
+  outline: none;
+}
+
+.infopoint-status {
+  color: #0369a1;
+  margin: 0;
+  font-size: .95rem;
+}
+
+@media (max-width: 480px) {
+  .infopoint-card {
+    gap: 20px;
+    padding: 36px 24px;
+  }
+
+  .infopoint-symbol {
+    width: 120px;
+    height: 120px;
+    font-size: 72px;
+  }
+
+  .infopoint-text {
+    font-size: 1.1rem;
+  }
+}
+
+/*# sourceMappingURL=src_styles_infopoint_c7614f93.css.map*/
