@@ -28,18 +28,17 @@ class TextToSpeechService
 
     public function synthesize(string $text, string $format = 'mp3'): string
     {
-        $response = $this->client->audio()->speech()->create([
+        $response = $this->client->audio()->speech([
             'model' => $this->model,
             'voice' => $this->voice,
             'input' => $text,
             'format' => $format,
         ]);
 
-        $audioContent = $response->toStream();
-        if (!$audioContent) {
+        if (!$response) {
             throw new RuntimeException('Risposta TTS vuota.');
         }
 
-        return base64_encode($audioContent);
+        return base64_encode($response);
     }
 }
