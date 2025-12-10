@@ -99,28 +99,33 @@ const InfoPointPage = () => {
     }
   };
 
+  const agendaButton = (
+    <button type="button" className={styles.agendaButton}>
+      Consulta l&apos;agenda
+    </button>
+  );
+
   return (
     <div className={pageClasses}>
-      <header
-        className={`${styles.pageHeader} ${
-          hasConversation ? styles.pageHeaderVisible : ""
-        }`}
-      >
-        <h1>Info Point AI</h1>
-      </header>
       <div className={heroClasses}>
-        <h1 className={styles.heroTitle}>Info Point AI</h1>
-        <p className={styles.heroText}>
-          {assistantStarted
-            ? "Chiedi qualcosa al nostro assistente AI. Inserisci la tua domanda qui sotto e premi invio."
-            : "Scopri l'evento e fai domande al nostro assistente AI. Premi il simbolo per iniziare la conversazione."}
-        </p>
+        <h1
+          className={`${styles.heroTitle} ${
+            hasConversation ? styles.heroTitleCompact : ""
+          }`}
+        >
+          Info Point AI
+        </h1>
         {assistantStarted && (
-          <div className={styles.quickActions}>
-            <button type="button" className={styles.agendaButton}>
-              Consulta l&apos;agenda
-            </button>
-          </div>
+          <div className={styles.quickActions}>{agendaButton}</div>
+        )}
+        {!hasConversation && (
+          <>
+            <p className={styles.heroText}>
+              {assistantStarted
+                ? "Chiedi qualcosa al nostro assistente AI. Inserisci la tua domanda qui sotto e premi invio."
+                : "Scopri l'evento e fai domande al nostro assistente AI. Premi il simbolo per iniziare la conversazione."}
+            </p>
+          </>
         )}
         <section
           className={`${styles.chatShell} ${
@@ -176,9 +181,7 @@ const InfoPointPage = () => {
       {!assistantStarted && (
         <div className={styles.secondaryActions}>
           <p className={styles.altLabel}>Altrimenti:</p>
-          <button type="button" className={styles.agendaButton}>
-            Consulta l&apos;agenda
-          </button>
+          {agendaButton}
         </div>
       )}
 
@@ -211,10 +214,20 @@ const InfoPointPage = () => {
               />
               <button
                 type="submit"
-                className={styles.sendButton}
+                className={`${styles.sendButton} ${
+                  isSending ? styles.sendButtonLoading : ""
+                }`}
                 disabled={!assistantStarted || isSending || !message.trim()}
               >
-                {isSending ? "Invio..." : "Invia"}
+                {isSending ? (
+                  <span className={styles.sendButtonDots}>
+                    <span />
+                    <span />
+                    <span />
+                  </span>
+                ) : (
+                  "Invia"
+                )}
               </button>
             </div>
           </form>

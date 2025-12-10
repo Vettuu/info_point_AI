@@ -2,7 +2,7 @@
 
 **Titolo evento:** Congresso Demo di Chirurgia Generale – "Update in General Surgery"  
 **Durata:** 3 giorni  
-**Periodo:** 15–17 maggio 2026  
+**Periodo:** 15–17 giugno 2026  
 **Sede:** Centro Congressi San Marco, Via Roma 123, 00100 Roma  
 **Crediti ECM:** Evento accreditato ECM per medici chirurghi (18 crediti ECM complessivi, presenza minima richiesta: 90% del monte ore).
 
@@ -24,6 +24,8 @@
     - Giorno 3: 08:00–16:00
   - Email: **segreteria@demo-chirurgia2026.it**
   - Telefono: **+39 06 1234 5678**
+- **Numero di Roberto (responsabile):**
+  - +39 3335789101
 
 ---
 
@@ -51,7 +53,7 @@
 
 ## 3. Programma scientifico – Vista generale
 
-### Giorno 1 – Venerdì 15 maggio 2026
+### Giorno 1 – Venerdì 15 giugno 2026
 
 **08:00 – 09:00** – Accredito e welcome coffee  
 **09:00 – 09:30** – **Saluti istituzionali** – *Sala Plenaria "Aula Magna"*  
@@ -78,7 +80,7 @@ Relatore: Prof. Marco Rossi
 
 ---
 
-### Giorno 2 – Sabato 16 maggio 2026
+### Giorno 2 – Sabato 16 giugno 2026
 
 **08:30 – 10:30** – **Sessione Plenaria 2 – Chirurgia oncologica del colon-retto** – *Sala Plenaria "Aula Magna"*
 - Approccio laparoscopico vs robotico
@@ -88,7 +90,7 @@ Relatore: Prof. Marco Rossi
 **10:30 – 11:00** – Coffee break  
 
 **11:00 – 13:00** – **Tavola rotonda multidisciplinare** – *Sala Plenaria "Aula Magna"*
-> "Gestione integrata del paziente anziano fragile in chirurgia maggiore"
+> "Gestione integrata del paziente anziano fragile in chirurgia giugnore"
 
 **13:00 – 14:00** – Lunch  
 
@@ -100,7 +102,7 @@ Relatore: Prof. Marco Rossi
 
 ---
 
-### Giorno 3 – Domenica 17 maggio 2026
+### Giorno 3 – Domenica 17 giugno 2026
 
 **08:30 – 10:30** – **Sessione Plenaria 3 – Complicanze post-operatorie** – *Sala Plenaria "Aula Magna"*
 - Fistole anastomotiche: diagnosi precoce e management

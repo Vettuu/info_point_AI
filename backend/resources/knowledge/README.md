@@ -7,3 +7,9 @@ Posiziona qui tutti i file testuali o descrizioni di immagini utili alle rispost
 - Il file `metadata.json` mantiene l'elenco dei documenti disponibili per semplificare l'indicizzazione.
 
 Esegui il comando di build dell'indice ogni volta che aggiorni i contenuti.
+
+
+# Come aggiornare le informazioni del modello
+
+cd backend
+php artisan app:build-knowledge-index
