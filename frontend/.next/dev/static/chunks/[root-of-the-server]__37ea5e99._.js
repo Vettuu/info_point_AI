@@ -465,7 +465,6 @@ function triggerUpdate(msg) {
 "[project]/src/pages/index.module.css [client] (css module)", ((__turbopack_context__) => {
 
 __turbopack_context__.v({
-  "agendaButton": "index-module__STTVBW__agendaButton",
   "altLabel": "index-module__STTVBW__altLabel",
   "bottomContent": "index-module__STTVBW__bottomContent",
   "bottomDock": "index-module__STTVBW__bottomDock",
@@ -481,6 +480,7 @@ __turbopack_context__.v({
   "chatShell": "index-module__STTVBW__chatShell",
   "chatShellActive": "index-module__STTVBW__chatShellActive",
   "chatVisible": "index-module__STTVBW__chatVisible",
+  "ctaButton": "index-module__STTVBW__ctaButton",
   "errorText": "index-module__STTVBW__errorText",
   "floatingSymbol": "index-module__STTVBW__floatingSymbol",
   "heroActivated": "index-module__STTVBW__heroActivated",
@@ -502,6 +502,9 @@ __turbopack_context__.v({
   "sendButtonLoading": "index-module__STTVBW__sendButtonLoading",
   "sendPulse": "index-module__STTVBW__sendPulse",
   "symbolDocked": "index-module__STTVBW__symbolDocked",
+  "voiceButton": "index-module__STTVBW__voiceButton",
+  "voiceButtonActive": "index-module__STTVBW__voiceButtonActive",
+  "voiceStatus": "index-module__STTVBW__voiceStatus",
 });
 }),
 "[project]/src/pages/index.js [client] (ecmascript)", ((__turbopack_context__) => {
@@ -526,10 +529,16 @@ const InfoPointPage = ()=>{
     const [message, setMessage] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$index$2e$js__$5b$client$5d$__$28$ecmascript$29$__["useState"])("");
     const [chatHistory, setChatHistory] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$index$2e$js__$5b$client$5d$__$28$ecmascript$29$__["useState"])([]);
     const [isSending, setIsSending] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$index$2e$js__$5b$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [isRecording, setIsRecording] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$index$2e$js__$5b$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [isVoiceProcessing, setIsVoiceProcessing] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$index$2e$js__$5b$client$5d$__$28$ecmascript$29$__["useState"])(false);
+    const [voiceStatus, setVoiceStatus] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$index$2e$js__$5b$client$5d$__$28$ecmascript$29$__["useState"])("");
     const [error, setError] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$index$2e$js__$5b$client$5d$__$28$ecmascript$29$__["useState"])("");
     const chatPaneRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$index$2e$js__$5b$client$5d$__$28$ecmascript$29$__["useRef"])(null);
     const chatEndRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$index$2e$js__$5b$client$5d$__$28$ecmascript$29$__["useRef"])(null);
+    const mediaRecorderRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$index$2e$js__$5b$client$5d$__$28$ecmascript$29$__["useRef"])(null);
+    const audioChunksRef = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$index$2e$js__$5b$client$5d$__$28$ecmascript$29$__["useRef"])([]);
     const assistantEndpoint = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$client$5d$__$28$ecmascript$29$__["default"].env.NEXT_PUBLIC_ASSISTANT_API ?? "http://localhost:8000/api/assistant";
+    const voiceAssistantEndpoint = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$client$5d$__$28$ecmascript$29$__["default"].env.NEXT_PUBLIC_VOICE_API ?? "http://localhost:8000/api/voice-assistant";
     const pageClasses = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$index$2e$js__$5b$client$5d$__$28$ecmascript$29$__["useMemo"])({
         "InfoPointPage.useMemo[pageClasses]": ()=>[
                 __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$client$5d$__$28$css__module$29$__["default"].infopointPage,
@@ -614,15 +623,113 @@ const InfoPointPage = ()=>{
             setIsSending(false);
         }
     };
-    const agendaButton = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-        type: "button",
-        className: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$client$5d$__$28$css__module$29$__["default"].agendaButton,
-        children: "Consulta l'agenda"
-    }, void 0, false, {
-        fileName: "[project]/src/pages/index.js",
-        lineNumber: 103,
-        columnNumber: 5
-    }, ("TURBOPACK compile-time value", void 0));
+    const agendaUrl = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$client$5d$__$28$ecmascript$29$__["default"].env.NEXT_PUBLIC_AGENDA_URL ?? "http://127.0.0.1:8000/docs/agenda";
+    const mapUrl = __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$build$2f$polyfills$2f$process$2e$js__$5b$client$5d$__$28$ecmascript$29$__["default"].env.NEXT_PUBLIC_MAP_URL ?? "http://127.0.0.1:8000/docs/piantina";
+    const handleOpenLink = (url)=>{
+        window.open(url, "_blank", "noopener,noreferrer");
+    };
+    const ctaButtons = /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["Fragment"], {
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                type: "button",
+                className: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$client$5d$__$28$css__module$29$__["default"].ctaButton,
+                onClick: ()=>handleOpenLink(agendaUrl),
+                children: "Consulta l'agenda"
+            }, void 0, false, {
+                fileName: "[project]/src/pages/index.js",
+                lineNumber: 120,
+                columnNumber: 7
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                type: "button",
+                className: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$client$5d$__$28$css__module$29$__["default"].ctaButton,
+                onClick: ()=>handleOpenLink(mapUrl),
+                children: "Visualizza piantina"
+            }, void 0, false, {
+                fileName: "[project]/src/pages/index.js",
+                lineNumber: 127,
+                columnNumber: 7
+            }, ("TURBOPACK compile-time value", void 0))
+        ]
+    }, void 0, true);
+    const handleToggleRecording = async ()=>{
+        if (isRecording) {
+            mediaRecorderRef.current?.stop();
+            setIsRecording(false);
+            setVoiceStatus("Sto elaborando la tua registrazione...");
+            return;
+        }
+        try {
+            setError("");
+            setVoiceStatus("Sto ascoltando...");
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: true
+            });
+            const recorder = new MediaRecorder(stream);
+            audioChunksRef.current = [];
+            recorder.ondataavailable = (event)=>{
+                if (event.data.size > 0) {
+                    audioChunksRef.current.push(event.data);
+                }
+            };
+            recorder.onstop = ()=>{
+                stream.getTracks().forEach((track)=>track.stop());
+                const audioBlob = new Blob(audioChunksRef.current, {
+                    type: "audio/webm"
+                });
+                sendVoiceMessage(audioBlob);
+            };
+            recorder.start();
+            mediaRecorderRef.current = recorder;
+            setIsRecording(true);
+        } catch (recorderError) {
+            setVoiceStatus("");
+            setError(recorderError instanceof Error ? recorderError.message : "Impossibile accedere al microfono.");
+        }
+    };
+    const sendVoiceMessage = async (blob)=>{
+        setIsRecording(false);
+        setIsVoiceProcessing(true);
+        setVoiceStatus("Sto trascrivendo e generando la risposta...");
+        const formData = new FormData();
+        formData.append("audio", blob, "input.webm");
+        try {
+            const response = await fetch(voiceAssistantEndpoint, {
+                method: "POST",
+                body: formData
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data?.error || data?.message || "Errore vocale inatteso");
+            }
+            setChatHistory((prev)=>[
+                    ...prev,
+                    {
+                        id: `voice-user-${Date.now()}`,
+                        role: "user",
+                        content: data.question || ""
+                    },
+                    {
+                        id: `voice-assistant-${Date.now()}`,
+                        role: "assistant",
+                        content: data.answer,
+                        sources: data.sources || []
+                    }
+                ]);
+            if (data.audio) {
+                const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
+                audio.play().catch(()=>{
+                /* ignore autoplay issues */ });
+            }
+            setVoiceStatus("Risposta pronta.");
+        } catch (voiceError) {
+            setError(voiceError.message);
+            setVoiceStatus("");
+        } finally{
+            setIsVoiceProcessing(false);
+            setTimeout(()=>setVoiceStatus(""), 2500);
+        }
+    };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: pageClasses,
         children: [
@@ -634,15 +741,15 @@ const InfoPointPage = ()=>{
                         children: "Info Point AI"
                     }, void 0, false, {
                         fileName: "[project]/src/pages/index.js",
-                        lineNumber: 111,
+                        lineNumber: 227,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     assistantStarted && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                         className: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$client$5d$__$28$css__module$29$__["default"].quickActions,
-                        children: agendaButton
+                        children: ctaButtons
                     }, void 0, false, {
                         fileName: "[project]/src/pages/index.js",
-                        lineNumber: 119,
+                        lineNumber: 235,
                         columnNumber: 11
                     }, ("TURBOPACK compile-time value", void 0)),
                     !hasConversation && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["Fragment"], {
@@ -651,7 +758,7 @@ const InfoPointPage = ()=>{
                             children: assistantStarted ? "Chiedi qualcosa al nostro assistente AI. Inserisci la tua domanda qui sotto e premi invio." : "Scopri l'evento e fai domande al nostro assistente AI. Premi il simbolo per iniziare la conversazione."
                         }, void 0, false, {
                             fileName: "[project]/src/pages/index.js",
-                            lineNumber: 123,
+                            lineNumber: 239,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false),
@@ -667,12 +774,12 @@ const InfoPointPage = ()=>{
                                         children: "La conversazione con l'assistente comparirà qui."
                                     }, void 0, false, {
                                         fileName: "[project]/src/pages/index.js",
-                                        lineNumber: 138,
+                                        lineNumber: 254,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/pages/index.js",
-                                    lineNumber: 137,
+                                    lineNumber: 253,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)) : chatHistory.map((entry)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                         className: `${__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$client$5d$__$28$css__module$29$__["default"].messageRow} ${entry.role === "user" ? __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$client$5d$__$28$css__module$29$__["default"].messageUser : __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$client$5d$__$28$css__module$29$__["default"].messageAssistant}`,
@@ -683,7 +790,7 @@ const InfoPointPage = ()=>{
                                                     children: entry.content
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/pages/index.js",
-                                                    lineNumber: 151,
+                                                    lineNumber: 267,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 entry.role === "assistant" && entry.sources && entry.sources.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
@@ -692,41 +799,41 @@ const InfoPointPage = ()=>{
                                                             children: source.title
                                                         }, `${entry.id}-${source.id}`, false, {
                                                             fileName: "[project]/src/pages/index.js",
-                                                            lineNumber: 157,
+                                                            lineNumber: 273,
                                                             columnNumber: 29
                                                         }, ("TURBOPACK compile-time value", void 0)))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/pages/index.js",
-                                                    lineNumber: 155,
+                                                    lineNumber: 271,
                                                     columnNumber: 25
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/pages/index.js",
-                                            lineNumber: 150,
+                                            lineNumber: 266,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, entry.id, false, {
                                         fileName: "[project]/src/pages/index.js",
-                                        lineNumber: 142,
+                                        lineNumber: 258,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0))),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     ref: chatEndRef
                                 }, void 0, false, {
                                     fileName: "[project]/src/pages/index.js",
-                                    lineNumber: 165,
+                                    lineNumber: 281,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/pages/index.js",
-                            lineNumber: 135,
+                            lineNumber: 251,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/src/pages/index.js",
-                        lineNumber: 130,
+                        lineNumber: 246,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -734,13 +841,13 @@ const InfoPointPage = ()=>{
                         children: error
                     }, void 0, false, {
                         fileName: "[project]/src/pages/index.js",
-                        lineNumber: 168,
+                        lineNumber: 284,
                         columnNumber: 19
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/pages/index.js",
-                lineNumber: 110,
+                lineNumber: 226,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -751,7 +858,7 @@ const InfoPointPage = ()=>{
                 children: "i"
             }, void 0, false, {
                 fileName: "[project]/src/pages/index.js",
-                lineNumber: 171,
+                lineNumber: 287,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             !assistantStarted && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -762,14 +869,21 @@ const InfoPointPage = ()=>{
                         children: "Altrimenti:"
                     }, void 0, false, {
                         fileName: "[project]/src/pages/index.js",
-                        lineNumber: 183,
+                        lineNumber: 299,
                         columnNumber: 11
                     }, ("TURBOPACK compile-time value", void 0)),
-                    agendaButton
+                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                        className: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$client$5d$__$28$css__module$29$__["default"].quickActions,
+                        children: ctaButtons
+                    }, void 0, false, {
+                        fileName: "[project]/src/pages/index.js",
+                        lineNumber: 300,
+                        columnNumber: 11
+                    }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/pages/index.js",
-                lineNumber: 182,
+                lineNumber: 298,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -787,7 +901,7 @@ const InfoPointPage = ()=>{
                                     children: "Invia il tuo messaggio"
                                 }, void 0, false, {
                                     fileName: "[project]/src/pages/index.js",
-                                    lineNumber: 200,
+                                    lineNumber: 316,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -805,7 +919,19 @@ const InfoPointPage = ()=>{
                                             disabled: !assistantStarted || isSending
                                         }, void 0, false, {
                                             fileName: "[project]/src/pages/index.js",
-                                            lineNumber: 204,
+                                            lineNumber: 320,
+                                            columnNumber: 15
+                                        }, ("TURBOPACK compile-time value", void 0)),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                            type: "button",
+                                            className: `${__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$client$5d$__$28$css__module$29$__["default"].voiceButton} ${isRecording ? __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$client$5d$__$28$css__module$29$__["default"].voiceButtonActive : ""}`,
+                                            onClick: handleToggleRecording,
+                                            disabled: isVoiceProcessing,
+                                            "aria-pressed": isRecording,
+                                            children: isRecording ? "Stop" : "Parla"
+                                        }, void 0, false, {
+                                            fileName: "[project]/src/pages/index.js",
+                                            lineNumber: 331,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -817,40 +943,49 @@ const InfoPointPage = ()=>{
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {}, void 0, false, {
                                                         fileName: "[project]/src/pages/index.js",
-                                                        lineNumber: 224,
+                                                        lineNumber: 351,
                                                         columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {}, void 0, false, {
                                                         fileName: "[project]/src/pages/index.js",
-                                                        lineNumber: 225,
+                                                        lineNumber: 352,
                                                         columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {}, void 0, false, {
                                                         fileName: "[project]/src/pages/index.js",
-                                                        lineNumber: 226,
+                                                        lineNumber: 353,
                                                         columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/pages/index.js",
-                                                lineNumber: 223,
+                                                lineNumber: 350,
                                                 columnNumber: 19
                                             }, ("TURBOPACK compile-time value", void 0)) : "Invia"
                                         }, void 0, false, {
                                             fileName: "[project]/src/pages/index.js",
-                                            lineNumber: 215,
+                                            lineNumber: 342,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/pages/index.js",
-                                    lineNumber: 203,
+                                    lineNumber: 319,
                                     columnNumber: 13
+                                }, ("TURBOPACK compile-time value", void 0)),
+                                voiceStatus && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                    className: __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$client$5d$__$28$css__module$29$__["default"].voiceStatus,
+                                    "aria-live": "polite",
+                                    children: voiceStatus
+                                }, void 0, false, {
+                                    fileName: "[project]/src/pages/index.js",
+                                    lineNumber: 361,
+                                    columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/pages/index.js",
-                            lineNumber: 194,
+                            lineNumber: 310,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -860,28 +995,28 @@ const InfoPointPage = ()=>{
                             children: "Avvia chat"
                         }, void 0, false, {
                             fileName: "[project]/src/pages/index.js",
-                            lineNumber: 234,
+                            lineNumber: 366,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/pages/index.js",
-                    lineNumber: 193,
+                    lineNumber: 309,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/src/pages/index.js",
-                lineNumber: 188,
+                lineNumber: 304,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/src/pages/index.js",
-        lineNumber: 109,
+        lineNumber: 225,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
-_s(InfoPointPage, "++ACGZIYLiOC2dDRD5kjA681Qwk=");
+_s(InfoPointPage, "9jr10UhMIyBT9hjNcpAoaQ0LFzQ=");
 _c = InfoPointPage;
 const __TURBOPACK__default__export__ = InfoPointPage;
 var _c;

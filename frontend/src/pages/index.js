@@ -8,12 +8,19 @@ const InfoPointPage = () => {
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [isSending, setIsSending] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isVoiceProcessing, setIsVoiceProcessing] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState("");
   const [error, setError] = useState("");
   const chatPaneRef = useRef(null);
   const chatEndRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
   const assistantEndpoint =
     process.env.NEXT_PUBLIC_ASSISTANT_API ?? "http://localhost:8000/api/assistant";
+  const voiceAssistantEndpoint =
+    process.env.NEXT_PUBLIC_VOICE_API ?? "http://localhost:8000/api/voice-assistant";
 
   const pageClasses = useMemo(
     () =>
@@ -99,11 +106,120 @@ const InfoPointPage = () => {
     }
   };
 
-  const agendaButton = (
-    <button type="button" className={styles.agendaButton}>
-      Consulta l&apos;agenda
-    </button>
+  const agendaUrl =
+    process.env.NEXT_PUBLIC_AGENDA_URL ?? "http://127.0.0.1:8000/docs/agenda";
+  const mapUrl =
+    process.env.NEXT_PUBLIC_MAP_URL ?? "http://127.0.0.1:8000/docs/piantina";
+
+  const handleOpenLink = (url) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const ctaButtons = (
+    <>
+      <button
+        type="button"
+        className={styles.ctaButton}
+        onClick={() => handleOpenLink(agendaUrl)}
+      >
+        Consulta l&apos;agenda
+      </button>
+      <button
+        type="button"
+        className={styles.ctaButton}
+        onClick={() => handleOpenLink(mapUrl)}
+      >
+        Visualizza piantina
+      </button>
+    </>
   );
+
+  const handleToggleRecording = async () => {
+    if (isRecording) {
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
+      setVoiceStatus("Sto elaborando la tua registrazione...");
+      return;
+    }
+
+    try {
+      setError("");
+      setVoiceStatus("Sto ascoltando...");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        sendVoiceMessage(audioBlob);
+      };
+
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecording(true);
+    } catch (recorderError) {
+      setVoiceStatus("");
+      setError(
+        recorderError instanceof Error
+          ? recorderError.message
+          : "Impossibile accedere al microfono."
+      );
+    }
+  };
+
+  const sendVoiceMessage = async (blob) => {
+    setIsRecording(false);
+    setIsVoiceProcessing(true);
+    setVoiceStatus("Sto trascrivendo e generando la risposta...");
+
+    const formData = new FormData();
+    formData.append("audio", blob, "input.webm");
+
+    try {
+      const response = await fetch(voiceAssistantEndpoint, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.error || data?.message || "Errore vocale inatteso");
+      }
+
+      setChatHistory((prev) => [
+        ...prev,
+        { id: `voice-user-${Date.now()}`, role: "user", content: data.question || "" },
+        {
+          id: `voice-assistant-${Date.now()}`,
+          role: "assistant",
+          content: data.answer,
+          sources: data.sources || [],
+        },
+      ]);
+
+      if (data.audio) {
+        const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
+        audio.play().catch(() => {
+          /* ignore autoplay issues */
+        });
+      }
+      setVoiceStatus("Risposta pronta.");
+    } catch (voiceError) {
+      setError(voiceError.message);
+      setVoiceStatus("");
+    } finally {
+      setIsVoiceProcessing(false);
+      setTimeout(() => setVoiceStatus(""), 2500);
+    }
+  };
 
   return (
     <div className={pageClasses}>
@@ -116,7 +232,7 @@ const InfoPointPage = () => {
           Info Point AI
         </h1>
         {assistantStarted && (
-          <div className={styles.quickActions}>{agendaButton}</div>
+          <div className={styles.quickActions}>{ctaButtons}</div>
         )}
         {!hasConversation && (
           <>
@@ -181,7 +297,7 @@ const InfoPointPage = () => {
       {!assistantStarted && (
         <div className={styles.secondaryActions}>
           <p className={styles.altLabel}>Altrimenti:</p>
-          {agendaButton}
+          <div className={styles.quickActions}>{ctaButtons}</div>
         </div>
       )}
 
@@ -213,6 +329,17 @@ const InfoPointPage = () => {
                 disabled={!assistantStarted || isSending}
               />
               <button
+                type="button"
+                className={`${styles.voiceButton} ${
+                  isRecording ? styles.voiceButtonActive : ""
+                }`}
+                onClick={handleToggleRecording}
+                disabled={isVoiceProcessing}
+                aria-pressed={isRecording}
+              >
+                {isRecording ? "Stop" : "Parla"}
+              </button>
+              <button
                 type="submit"
                 className={`${styles.sendButton} ${
                   isSending ? styles.sendButtonLoading : ""
@@ -230,6 +357,11 @@ const InfoPointPage = () => {
                 )}
               </button>
             </div>
+            {voiceStatus && (
+              <p className={styles.voiceStatus} aria-live="polite">
+                {voiceStatus}
+              </p>
+            )}
           </form>
           <button
             type="button"
