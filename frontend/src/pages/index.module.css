@@ -165,7 +165,7 @@
 .bottomDock {
   position: absolute;
   left: 50%;
-  bottom: clamp(20px, 6vh, 60px);
+  bottom: clamp(20px, 3vh, 60px);
   width: min(900px, 70vw);
   transform: translate(-50%, 40px);
   opacity: 0;

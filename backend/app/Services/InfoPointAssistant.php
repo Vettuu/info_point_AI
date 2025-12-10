@@ -14,6 +14,7 @@ class InfoPointAssistant
     private string $indexPath;
     private string $model;
     private string $embeddingModel;
+    private int $maxOutputTokens;
 
     public function __construct()
     {
@@ -27,6 +28,7 @@ class InfoPointAssistant
         $this->indexPath = config('openai.knowledge_index_path');
         $this->model = config('openai.model', 'gpt-4o-mini');
         $this->embeddingModel = config('openai.embedding_model', 'text-embedding-3-small');
+        $this->maxOutputTokens = (int) config('openai.max_output_tokens', 450);
     }
 
     public function answer(string $question): array
@@ -53,10 +55,16 @@ class InfoPointAssistant
         $prompt = "Sei Info Point AI. Usa esclusivamente il seguente contesto per rispondere in italiano.\n" .
             "Contesto:\n" . $context . "\n\nDomanda:\n" . $question;
 
-        $response = $this->client->responses()->create([
+        $payload = [
             'model' => $this->model,
             'input' => $prompt,
-        ]);
+        ];
+
+        if ($this->maxOutputTokens > 0) {
+            $payload['max_output_tokens'] = $this->maxOutputTokens;
+        }
+
+        $response = $this->client->responses()->create($payload);
 
         $answer = Arr::get($response, 'output.0.content.0.text');
 

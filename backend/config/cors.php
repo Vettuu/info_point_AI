@@ -1,12 +1,9 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'docs/*'],
+    'paths' => ['api/*', 'docs/*', 'ws/*'],
     'allowed_methods' => ['*'],
-    'allowed_origins' => [
-        'http://localhost:3000',
-        'http://127.0.0.1:3000',
-    ],
+    'allowed_origins' => array_filter(array_map('trim', explode(',', env('FRONTEND_ORIGINS', 'http://localhost:3000,http://127.0.0.1:3000')))),
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'],
     'exposed_headers' => [],

@@ -1,1 +1,47 @@
 [00:00:01.721] Server  LOG      ✓ Ready in 1334ms
+[01:07:54.491] Server  LOG      ✓ Compiled in 219ms
+[04:42:05.479] Server  LOG      ✓ Compiled in 158ms
+[04:42:06.093] Browser LOG     Refreshing page data due to server-side change
+[04:42:19.781] Server  LOG      ✓ Compiled in 41ms
+[04:42:20.491] Browser LOG     Refreshing page data due to server-side change
+[04:42:36.402] Server  LOG      ✓ Compiled in 26ms
+[04:42:47.897] Server  LOG      ✓ Compiled in 23ms
+[04:42:57.856] Server  LOG      ✓ Compiled in 20ms
+[04:42:58.290] Browser LOG     Refreshing page data due to server-side change
+[04:43:36.307] Server  LOG      ✓ Compiled in 64ms
+[04:43:36.990] Browser LOG     Refreshing page data due to server-side change
+[04:43:52.883] Server  LOG      ✓ Compiled in 107ms
+[04:44:13.043] Server  LOG      ✓ Compiled in 75ms
+[04:44:33.185] Server  LOG      ✓ Compiled in 21ms
+[04:44:58.397] Server  LOG      ✓ Compiled in 20ms
+[04:49:36.965] Server  LOG      ✓ Compiled in 38ms
+[04:49:37.892] Browser LOG     Refreshing page data due to server-side change
+[04:49:47.682] Server  LOG      ✓ Compiled in 34ms
+[04:49:59.762] Server  LOG      ✓ Compiled in 37ms
+[04:50:00.392] Browser LOG     Refreshing page data due to server-side change
+[04:50:10.334] Server  LOG      ✓ Compiled in 41ms
+[04:50:37.713] Server  LOG      ✓ Compiled in 28ms
+[04:50:38.190] Browser ERROR   %o
+
+%s
+
+%s
+ {} The above error occurred in the <InfoPointPage> component. React will try to recreate this component tree from scratch using the error boundary you provided, PagesDevOverlayErrorBoundary.
+[04:50:51.662] Server  LOG      ✓ Compiled in 19ms
+[04:50:52.590] Browser ERROR   %o
+
+%s
+
+%s
+ {} The above error occurred in the <InfoPointPage> component. React will try to recreate this component tree from scratch using the error boundary you provided, PagesDevOverlayErrorBoundary.
+[04:51:33.285] Server  LOG      ✓ Compiled in 25ms
+[04:51:33.990] Browser ERROR   %o
+
+%s
+
+%s
+ {} The above error occurred in the <InfoPointPage> component. React will try to recreate this component tree from scratch using the error boundary you provided, PagesDevOverlayErrorBoundary.
+[04:51:46.285] Server  LOG      ✓ Compiled in 13ms
+[04:52:05.698] Server  LOG      ✓ Compiled in 21ms
+[04:52:20.512] Server  LOG      ✓ Compiled in 16ms
+[04:55:05.599] Server  LOG      ✓ Compiled in 13ms

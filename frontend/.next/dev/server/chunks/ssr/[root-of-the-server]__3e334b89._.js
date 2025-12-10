@@ -58,6 +58,101 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$mod
 ;
 ;
 ;
+const bufferToBase64 = (arrayBuffer)=>{
+    let binary = "";
+    const bytes = new Uint8Array(arrayBuffer);
+    const length = bytes.byteLength;
+    for(let index = 0; index < length; index += 1){
+        binary += String.fromCharCode(bytes[index]);
+    }
+    return ("TURBOPACK compile-time truthy", 1) ? "" : "TURBOPACK unreachable";
+};
+const base64ToUint8Array = (base64)=>{
+    if ("TURBOPACK compile-time truthy", 1) {
+        return new Uint8Array();
+    }
+    //TURBOPACK unreachable
+    ;
+    const binary = undefined;
+    const output = undefined;
+    let index;
+};
+const VOICE_STATUS_LABELS = {
+    idle: "",
+    listening: "Sto ascoltando...",
+    processing: "Sto elaborando la tua richiesta...",
+    speaking: "Sto rispondendo..."
+};
+class AudioStreamer {
+    constructor(){
+        this.queue = [];
+        this.activeAudio = null;
+        this.streamClosing = false;
+        this.onDrain = null;
+    }
+    enqueue(base64Chunk) {
+        if (!base64Chunk) {
+            return;
+        }
+        this.queue.push(base64Chunk);
+        if (!this.activeAudio) {
+            this.playNext();
+        }
+    }
+    playNext() {
+        if (this.queue.length === 0) {
+            this.activeAudio = null;
+            if (this.streamClosing && typeof this.onDrain === "function") {
+                const callback = this.onDrain;
+                this.onDrain = null;
+                this.streamClosing = false;
+                callback();
+            }
+            return;
+        }
+        const chunk = this.queue.shift();
+        const typedArray = base64ToUint8Array(chunk);
+        const blob = new Blob([
+            typedArray.buffer
+        ], {
+            type: "audio/mp3"
+        });
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        this.activeAudio = audio;
+        const cleanup = ()=>{
+            URL.revokeObjectURL(url);
+            this.activeAudio = null;
+            this.playNext();
+        };
+        audio.onended = cleanup;
+        audio.onerror = cleanup;
+        audio.play().catch(cleanup);
+    }
+    markStreamComplete(onDrain) {
+        this.onDrain = onDrain;
+        this.streamClosing = true;
+        if (!this.activeAudio && this.queue.length === 0 && typeof this.onDrain === "function") {
+            const callback = this.onDrain;
+            this.onDrain = null;
+            this.streamClosing = false;
+            callback();
+        }
+    }
+    flush() {
+        this.queue = [];
+        if (this.activeAudio) {
+            this.activeAudio.pause();
+            this.activeAudio = null;
+        }
+        this.streamClosing = false;
+        if (typeof this.onDrain === "function") {
+            const callback = this.onDrain;
+            this.onDrain = null;
+            callback();
+        }
+    }
+}
 const InfoPointPage = ()=>{
     const [assistantStarted, setAssistantStarted] = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useState"])(false);
     const [message, setMessage] = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useState"])("");
@@ -66,13 +161,20 @@ const InfoPointPage = ()=>{
     const [isRecording, setIsRecording] = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useState"])(false);
     const [isVoiceProcessing, setIsVoiceProcessing] = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useState"])(false);
     const [voiceStatus, setVoiceStatus] = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useState"])("");
+    const [voiceTransport, setVoiceTransport] = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useState"])("http");
+    const [voiceSessionId, setVoiceSessionId] = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useState"])(null);
+    const [voicePhase, setVoicePhase] = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useState"])("idle");
     const [error, setError] = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useState"])("");
     const chatPaneRef = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useRef"])(null);
     const chatEndRef = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useRef"])(null);
     const mediaRecorderRef = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useRef"])(null);
     const audioChunksRef = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useRef"])([]);
+    const wsRef = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useRef"])(null);
+    const recordingModeRef = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useRef"])("http");
+    const audioStreamerRef = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useRef"])(null);
     const assistantEndpoint = process.env.NEXT_PUBLIC_ASSISTANT_API ?? "http://localhost:8000/api/assistant";
     const voiceAssistantEndpoint = process.env.NEXT_PUBLIC_VOICE_API ?? "http://localhost:8000/api/voice-assistant";
+    const voiceWsUrl = process.env.NEXT_PUBLIC_VOICE_WS ?? "ws://127.0.0.1:8000/ws/voice-assistant";
     const pageClasses = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useMemo"])(()=>[
             __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$ssr$5d$__$28$css__module$29$__["default"].infopointPage,
             assistantStarted ? __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$ssr$5d$__$28$css__module$29$__["default"].pageStarted : ""
@@ -86,6 +188,115 @@ const InfoPointPage = ()=>{
         assistantStarted
     ]);
     const hasConversation = chatHistory.length > 0;
+    const updateVoicePhase = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useCallback"])((nextPhase, explicitStatus)=>{
+        setVoicePhase(nextPhase);
+        if (typeof explicitStatus === "string") {
+            setVoiceStatus(explicitStatus);
+            return;
+        }
+        setVoiceStatus(VOICE_STATUS_LABELS[nextPhase] ?? "");
+    }, [
+        setVoicePhase,
+        setVoiceStatus
+    ]);
+    const sendWsPayload = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useCallback"])((payload)=>{
+        const ws = wsRef.current;
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            return false;
+        }
+        const message = voiceSessionId ? {
+            ...payload,
+            sessionId: payload.sessionId ?? voiceSessionId
+        } : payload;
+        ws.send(JSON.stringify(message));
+        return true;
+    }, [
+        voiceSessionId
+    ]);
+    const sendAudioChunkViaWs = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useCallback"])(async (blob)=>{
+        try {
+            const buffer = await blob.arrayBuffer();
+            const base64Chunk = bufferToBase64(buffer);
+            return sendWsPayload({
+                type: "audio_chunk",
+                data: base64Chunk
+            });
+        } catch (chunkError) {
+            setVoiceTransport("http");
+            return false;
+        }
+    }, [
+        sendWsPayload,
+        setVoiceTransport
+    ]);
+    const handleWsPayload = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useCallback"])((payload)=>{
+        if (!payload || typeof payload !== "object") {
+            return;
+        }
+        switch(payload.type){
+            case "session_started":
+                setVoiceSessionId(payload.sessionId ?? null);
+                break;
+            case "transcript":
+                if (payload.final && payload.text) {
+                    setChatHistory((prev)=>[
+                            ...prev,
+                            {
+                                id: `voice-user-${Date.now()}`,
+                                role: "user",
+                                content: payload.text
+                            }
+                        ]);
+                    updateVoicePhase("processing");
+                } else if (payload.text) {
+                    setVoiceStatus(`Sto trascrivendo: ${payload.text}`);
+                }
+                break;
+            case "assistant_text":
+                if (payload.answer) {
+                    setChatHistory((prev)=>[
+                            ...prev,
+                            {
+                                id: `assistant-${Date.now()}`,
+                                role: "assistant",
+                                content: payload.answer,
+                                sources: payload.sources ?? []
+                            }
+                        ]);
+                }
+                updateVoicePhase(payload.audioStreaming ? "speaking" : "idle");
+                setIsVoiceProcessing(false);
+                break;
+            case "assistant_audio_chunk":
+                if (payload.data) {
+                    audioStreamerRef.current?.enqueue(payload.data);
+                    updateVoicePhase("speaking");
+                }
+                break;
+            case "assistant_audio_end":
+                audioStreamerRef.current?.markStreamComplete(()=>{
+                    updateVoicePhase("idle");
+                    setIsVoiceProcessing(false);
+                });
+                break;
+            case "assistant_paused":
+                audioStreamerRef.current?.flush();
+                updateVoicePhase("idle", "Risposta interrotta, pronto a ricevere una nuova domanda.");
+                break;
+            case "error":
+                setError(payload.message || "Errore nella modalità vocale realtime.");
+                updateVoicePhase("idle");
+                setIsVoiceProcessing(false);
+                break;
+            default:
+                break;
+        }
+    }, [
+        setChatHistory,
+        setError,
+        setIsVoiceProcessing,
+        updateVoicePhase
+    ]);
     (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useEffect"])(()=>{
         if (chatPaneRef.current) {
             chatPaneRef.current.scrollTop = chatPaneRef.current.scrollHeight;
@@ -99,6 +310,35 @@ const InfoPointPage = ()=>{
     }, [
         chatHistory,
         assistantStarted
+    ]);
+    (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useEffect"])(()=>{
+        audioStreamerRef.current = new AudioStreamer();
+        return ()=>{
+            audioStreamerRef.current?.flush();
+            audioStreamerRef.current = null;
+        };
+    }, []);
+    (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useEffect"])(()=>{
+        if (!assistantStarted) {
+            if (wsRef.current) {
+                wsRef.current.close();
+                wsRef.current = null;
+            }
+            setVoiceSessionId(null);
+            setVoiceTransport("http");
+            return;
+        }
+        if ("TURBOPACK compile-time truthy", 1) {
+            return;
+        }
+        //TURBOPACK unreachable
+        ;
+        let isActive;
+    }, [
+        assistantStarted,
+        handleWsPayload,
+        updateVoicePhase,
+        voiceWsUrl
     ]);
     const handleStartAssistant = ()=>{
         if (!assistantStarted) {
@@ -165,7 +405,7 @@ const InfoPointPage = ()=>{
                 children: "Consulta l'agenda"
             }, void 0, false, {
                 fileName: "[project]/src/pages/index.js",
-                lineNumber: 120,
+                lineNumber: 417,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("button", {
@@ -175,50 +415,94 @@ const InfoPointPage = ()=>{
                 children: "Visualizza piantina"
             }, void 0, false, {
                 fileName: "[project]/src/pages/index.js",
-                lineNumber: 127,
+                lineNumber: 424,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true);
     const handleToggleRecording = async ()=>{
+        if (!assistantStarted) {
+            return;
+        }
+        if (!isRecording && voicePhase === "speaking") {
+            audioStreamerRef.current?.flush();
+            sendWsPayload({
+                type: "user_cancel"
+            });
+        }
         if (isRecording) {
+            if (recordingModeRef.current === "ws") {
+                updateVoicePhase("processing");
+                setIsVoiceProcessing(true);
+            }
             mediaRecorderRef.current?.stop();
-            setIsRecording(false);
-            setVoiceStatus("Sto elaborando la tua registrazione...");
             return;
         }
         try {
             setError("");
-            setVoiceStatus("Sto ascoltando...");
-            const stream = await navigator.mediaDevices.getUserMedia({
+            const audioStream = await navigator.mediaDevices.getUserMedia({
                 audio: true
             });
-            const recorder = new MediaRecorder(stream);
+            const canUseStreaming = voiceTransport === "ws" && wsRef.current && wsRef.current.readyState === WebSocket.OPEN && voiceSessionId;
+            recordingModeRef.current = canUseStreaming ? "ws" : "http";
+            const recorder = new MediaRecorder(audioStream);
             audioChunksRef.current = [];
-            recorder.ondataavailable = (event)=>{
-                if (event.data.size > 0) {
+            recorder.ondataavailable = async (event)=>{
+                if (!event.data || event.data.size === 0) {
+                    return;
+                }
+                if (recordingModeRef.current === "ws") {
+                    const sent = await sendAudioChunkViaWs(event.data);
+                    if (!sent) {
+                        audioChunksRef.current.push(event.data);
+                    }
+                } else {
                     audioChunksRef.current.push(event.data);
                 }
             };
             recorder.onstop = ()=>{
-                stream.getTracks().forEach((track)=>track.stop());
-                const audioBlob = new Blob(audioChunksRef.current, {
-                    type: "audio/webm"
-                });
-                sendVoiceMessage(audioBlob);
+                audioStream.getTracks().forEach((track)=>track.stop());
+                setIsRecording(false);
+                if (recordingModeRef.current === "ws") {
+                    updateVoicePhase("processing");
+                    setIsVoiceProcessing(true);
+                    const sent = sendWsPayload({
+                        type: "user_stop"
+                    });
+                    if (!sent && audioChunksRef.current.length > 0) {
+                        const fallbackBlob = new Blob(audioChunksRef.current, {
+                            type: "audio/webm"
+                        });
+                        sendVoiceMessage(fallbackBlob);
+                    }
+                } else if (audioChunksRef.current.length > 0) {
+                    const audioBlob = new Blob(audioChunksRef.current, {
+                        type: "audio/webm"
+                    });
+                    sendVoiceMessage(audioBlob);
+                }
+                audioChunksRef.current = [];
             };
-            recorder.start();
+            recorder.start(canUseStreaming ? 200 : undefined);
             mediaRecorderRef.current = recorder;
             setIsRecording(true);
+            if (canUseStreaming) {
+                updateVoicePhase("listening");
+            } else {
+                updateVoicePhase("listening", "Modalità realtime non disponibile: registrazione classica avviata.");
+            }
         } catch (recorderError) {
-            setVoiceStatus("");
+            updateVoicePhase("idle");
             setError(recorderError instanceof Error ? recorderError.message : "Impossibile accedere al microfono.");
         }
     };
     const sendVoiceMessage = async (blob)=>{
+        if (!blob) {
+            return;
+        }
         setIsRecording(false);
         setIsVoiceProcessing(true);
-        setVoiceStatus("Sto trascrivendo e generando la risposta...");
+        updateVoicePhase("processing");
         const formData = new FormData();
         formData.append("audio", blob, "input.webm");
         try {
@@ -245,17 +529,20 @@ const InfoPointPage = ()=>{
                     }
                 ]);
             if (data.audio) {
-                const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
-                audio.play().catch(()=>{
-                /* ignore autoplay issues */ });
+                updateVoicePhase("speaking");
+                audioStreamerRef.current?.flush();
+                audioStreamerRef.current?.enqueue(data.audio);
+                audioStreamerRef.current?.markStreamComplete(()=>{
+                    updateVoicePhase("idle", "Risposta pronta.");
+                });
+            } else {
+                updateVoicePhase("idle", "Risposta pronta.");
             }
-            setVoiceStatus("Risposta pronta.");
         } catch (voiceError) {
             setError(voiceError.message);
-            setVoiceStatus("");
+            updateVoicePhase("idle");
         } finally{
             setIsVoiceProcessing(false);
-            setTimeout(()=>setVoiceStatus(""), 2500);
         }
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("div", {
@@ -269,7 +556,7 @@ const InfoPointPage = ()=>{
                         children: "Info Point AI"
                     }, void 0, false, {
                         fileName: "[project]/src/pages/index.js",
-                        lineNumber: 227,
+                        lineNumber: 581,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     assistantStarted && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("div", {
@@ -277,7 +564,7 @@ const InfoPointPage = ()=>{
                         children: ctaButtons
                     }, void 0, false, {
                         fileName: "[project]/src/pages/index.js",
-                        lineNumber: 235,
+                        lineNumber: 589,
                         columnNumber: 11
                     }, ("TURBOPACK compile-time value", void 0)),
                     !hasConversation && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["Fragment"], {
@@ -286,7 +573,7 @@ const InfoPointPage = ()=>{
                             children: assistantStarted ? "Chiedi qualcosa al nostro assistente AI. Inserisci la tua domanda qui sotto e premi invio." : "Scopri l'evento e fai domande al nostro assistente AI. Premi il simbolo per iniziare la conversazione."
                         }, void 0, false, {
                             fileName: "[project]/src/pages/index.js",
-                            lineNumber: 239,
+                            lineNumber: 593,
                             columnNumber: 13
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false),
@@ -302,12 +589,12 @@ const InfoPointPage = ()=>{
                                         children: "La conversazione con l'assistente comparirà qui."
                                     }, void 0, false, {
                                         fileName: "[project]/src/pages/index.js",
-                                        lineNumber: 254,
+                                        lineNumber: 608,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/pages/index.js",
-                                    lineNumber: 253,
+                                    lineNumber: 607,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0)) : chatHistory.map((entry)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("div", {
                                         className: `${__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$ssr$5d$__$28$css__module$29$__["default"].messageRow} ${entry.role === "user" ? __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$ssr$5d$__$28$css__module$29$__["default"].messageUser : __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$ssr$5d$__$28$css__module$29$__["default"].messageAssistant}`,
@@ -318,7 +605,7 @@ const InfoPointPage = ()=>{
                                                     children: entry.content
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/pages/index.js",
-                                                    lineNumber: 267,
+                                                    lineNumber: 621,
                                                     columnNumber: 21
                                                 }, ("TURBOPACK compile-time value", void 0)),
                                                 entry.role === "assistant" && entry.sources && entry.sources.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("ul", {
@@ -327,41 +614,41 @@ const InfoPointPage = ()=>{
                                                             children: source.title
                                                         }, `${entry.id}-${source.id}`, false, {
                                                             fileName: "[project]/src/pages/index.js",
-                                                            lineNumber: 273,
+                                                            lineNumber: 627,
                                                             columnNumber: 29
                                                         }, ("TURBOPACK compile-time value", void 0)))
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/pages/index.js",
-                                                    lineNumber: 271,
+                                                    lineNumber: 625,
                                                     columnNumber: 25
                                                 }, ("TURBOPACK compile-time value", void 0))
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/pages/index.js",
-                                            lineNumber: 266,
+                                            lineNumber: 620,
                                             columnNumber: 19
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, entry.id, false, {
                                         fileName: "[project]/src/pages/index.js",
-                                        lineNumber: 258,
+                                        lineNumber: 612,
                                         columnNumber: 17
                                     }, ("TURBOPACK compile-time value", void 0))),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("div", {
                                     ref: chatEndRef
                                 }, void 0, false, {
                                     fileName: "[project]/src/pages/index.js",
-                                    lineNumber: 281,
+                                    lineNumber: 635,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/pages/index.js",
-                            lineNumber: 251,
+                            lineNumber: 605,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/src/pages/index.js",
-                        lineNumber: 246,
+                        lineNumber: 600,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     error && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("p", {
@@ -369,13 +656,13 @@ const InfoPointPage = ()=>{
                         children: error
                     }, void 0, false, {
                         fileName: "[project]/src/pages/index.js",
-                        lineNumber: 284,
+                        lineNumber: 638,
                         columnNumber: 19
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/pages/index.js",
-                lineNumber: 226,
+                lineNumber: 580,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("button", {
@@ -386,7 +673,7 @@ const InfoPointPage = ()=>{
                 children: "i"
             }, void 0, false, {
                 fileName: "[project]/src/pages/index.js",
-                lineNumber: 287,
+                lineNumber: 641,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             !assistantStarted && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("div", {
@@ -397,7 +684,7 @@ const InfoPointPage = ()=>{
                         children: "Altrimenti:"
                     }, void 0, false, {
                         fileName: "[project]/src/pages/index.js",
-                        lineNumber: 299,
+                        lineNumber: 653,
                         columnNumber: 11
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("div", {
@@ -405,13 +692,13 @@ const InfoPointPage = ()=>{
                         children: ctaButtons
                     }, void 0, false, {
                         fileName: "[project]/src/pages/index.js",
-                        lineNumber: 300,
+                        lineNumber: 654,
                         columnNumber: 11
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/pages/index.js",
-                lineNumber: 298,
+                lineNumber: 652,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("div", {
@@ -429,7 +716,7 @@ const InfoPointPage = ()=>{
                                     children: "Invia il tuo messaggio"
                                 }, void 0, false, {
                                     fileName: "[project]/src/pages/index.js",
-                                    lineNumber: 316,
+                                    lineNumber: 670,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("div", {
@@ -447,7 +734,7 @@ const InfoPointPage = ()=>{
                                             disabled: !assistantStarted || isSending
                                         }, void 0, false, {
                                             fileName: "[project]/src/pages/index.js",
-                                            lineNumber: 320,
+                                            lineNumber: 674,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("button", {
@@ -459,7 +746,7 @@ const InfoPointPage = ()=>{
                                             children: isRecording ? "Stop" : "Parla"
                                         }, void 0, false, {
                                             fileName: "[project]/src/pages/index.js",
-                                            lineNumber: 331,
+                                            lineNumber: 685,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("button", {
@@ -471,34 +758,34 @@ const InfoPointPage = ()=>{
                                                 children: [
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("span", {}, void 0, false, {
                                                         fileName: "[project]/src/pages/index.js",
-                                                        lineNumber: 351,
+                                                        lineNumber: 705,
                                                         columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("span", {}, void 0, false, {
                                                         fileName: "[project]/src/pages/index.js",
-                                                        lineNumber: 352,
+                                                        lineNumber: 706,
                                                         columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0)),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("span", {}, void 0, false, {
                                                         fileName: "[project]/src/pages/index.js",
-                                                        lineNumber: 353,
+                                                        lineNumber: 707,
                                                         columnNumber: 21
                                                     }, ("TURBOPACK compile-time value", void 0))
                                                 ]
                                             }, void 0, true, {
                                                 fileName: "[project]/src/pages/index.js",
-                                                lineNumber: 350,
+                                                lineNumber: 704,
                                                 columnNumber: 19
                                             }, ("TURBOPACK compile-time value", void 0)) : "Invia"
                                         }, void 0, false, {
                                             fileName: "[project]/src/pages/index.js",
-                                            lineNumber: 342,
+                                            lineNumber: 696,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/pages/index.js",
-                                    lineNumber: 319,
+                                    lineNumber: 673,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 voiceStatus && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("p", {
@@ -507,13 +794,13 @@ const InfoPointPage = ()=>{
                                     children: voiceStatus
                                 }, void 0, false, {
                                     fileName: "[project]/src/pages/index.js",
-                                    lineNumber: 361,
+                                    lineNumber: 715,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/pages/index.js",
-                            lineNumber: 310,
+                            lineNumber: 664,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react$2f$jsx$2d$dev$2d$runtime__$5b$external$5d$__$28$react$2f$jsx$2d$dev$2d$runtime$2c$__cjs$29$__["jsxDEV"])("button", {
@@ -523,24 +810,24 @@ const InfoPointPage = ()=>{
                             children: "Avvia chat"
                         }, void 0, false, {
                             fileName: "[project]/src/pages/index.js",
-                            lineNumber: 366,
+                            lineNumber: 720,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/pages/index.js",
-                    lineNumber: 309,
+                    lineNumber: 663,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/src/pages/index.js",
-                lineNumber: 304,
+                lineNumber: 658,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/src/pages/index.js",
-        lineNumber: 225,
+        lineNumber: 579,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };

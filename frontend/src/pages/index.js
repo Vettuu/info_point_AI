@@ -1,7 +1,116 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./index.module.css";
+
+const bufferToBase64 = (arrayBuffer) => {
+  let binary = "";
+  const bytes = new Uint8Array(arrayBuffer);
+  const length = bytes.byteLength;
+
+  for (let index = 0; index < length; index += 1) {
+    binary += String.fromCharCode(bytes[index]);
+  }
+
+  return typeof window === "undefined" ? "" : window.btoa(binary);
+};
+
+const base64ToUint8Array = (base64) => {
+  if (typeof window === "undefined" || !base64) {
+    return new Uint8Array();
+  }
+
+  const binary = window.atob(base64);
+  const output = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    output[index] = binary.charCodeAt(index);
+  }
+
+  return output;
+};
+
+const VOICE_STATUS_LABELS = {
+  idle: "",
+  listening: "Sto ascoltando...",
+  processing: "Sto elaborando la tua richiesta...",
+  speaking: "Sto rispondendo...",
+};
+
+class AudioStreamer {
+  constructor() {
+    this.queue = [];
+    this.activeAudio = null;
+    this.streamClosing = false;
+    this.onDrain = null;
+  }
+
+  enqueue(base64Chunk) {
+    if (!base64Chunk) {
+      return;
+    }
+
+    this.queue.push(base64Chunk);
+    if (!this.activeAudio) {
+      this.playNext();
+    }
+  }
+
+  playNext() {
+    if (this.queue.length === 0) {
+      this.activeAudio = null;
+      if (this.streamClosing && typeof this.onDrain === "function") {
+        const callback = this.onDrain;
+        this.onDrain = null;
+        this.streamClosing = false;
+        callback();
+      }
+      return;
+    }
+
+    const chunk = this.queue.shift();
+    const typedArray = base64ToUint8Array(chunk);
+    const blob = new Blob([typedArray.buffer], { type: "audio/mp3" });
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    this.activeAudio = audio;
+
+    const cleanup = () => {
+      URL.revokeObjectURL(url);
+      this.activeAudio = null;
+      this.playNext();
+    };
+
+    audio.onended = cleanup;
+    audio.onerror = cleanup;
+    audio.play().catch(cleanup);
+  }
+
+  markStreamComplete(onDrain) {
+    this.onDrain = onDrain;
+    this.streamClosing = true;
+    if (!this.activeAudio && this.queue.length === 0 && typeof this.onDrain === "function") {
+      const callback = this.onDrain;
+      this.onDrain = null;
+      this.streamClosing = false;
+      callback();
+    }
+  }
+
+  flush() {
+    this.queue = [];
+    if (this.activeAudio) {
+      this.activeAudio.pause();
+      this.activeAudio = null;
+    }
+    this.streamClosing = false;
+    if (typeof this.onDrain === "function") {
+      const callback = this.onDrain;
+      this.onDrain = null;
+      callback();
+    }
+  }
+}
 
 const InfoPointPage = () => {
   const [assistantStarted, setAssistantStarted] = useState(false);
@@ -11,16 +120,24 @@ const InfoPointPage = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isVoiceProcessing, setIsVoiceProcessing] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState("");
+  const [voiceTransport, setVoiceTransport] = useState("http");
+  const [voiceSessionId, setVoiceSessionId] = useState(null);
+  const [voicePhase, setVoicePhase] = useState("idle");
   const [error, setError] = useState("");
   const chatPaneRef = useRef(null);
   const chatEndRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const wsRef = useRef(null);
+  const recordingModeRef = useRef("http");
+  const audioStreamerRef = useRef(null);
 
   const assistantEndpoint =
     process.env.NEXT_PUBLIC_ASSISTANT_API ?? "http://localhost:8000/api/assistant";
   const voiceAssistantEndpoint =
     process.env.NEXT_PUBLIC_VOICE_API ?? "http://localhost:8000/api/voice-assistant";
+  const voiceWsUrl =
+    process.env.NEXT_PUBLIC_VOICE_WS ?? "ws://127.0.0.1:8000/ws/voice-assistant";
 
   const pageClasses = useMemo(
     () =>
@@ -40,6 +157,118 @@ const InfoPointPage = () => {
 
   const hasConversation = chatHistory.length > 0;
 
+  const updateVoicePhase = useCallback(
+    (nextPhase, explicitStatus) => {
+      setVoicePhase(nextPhase);
+
+      if (typeof explicitStatus === "string") {
+        setVoiceStatus(explicitStatus);
+        return;
+      }
+
+      setVoiceStatus(VOICE_STATUS_LABELS[nextPhase] ?? "");
+    },
+    [setVoicePhase, setVoiceStatus]
+  );
+
+  const sendWsPayload = useCallback(
+    (payload) => {
+      const ws = wsRef.current;
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        return false;
+      }
+
+      const message = voiceSessionId
+        ? { ...payload, sessionId: payload.sessionId ?? voiceSessionId }
+        : payload;
+
+      ws.send(JSON.stringify(message));
+      return true;
+    },
+    [voiceSessionId]
+  );
+
+  const sendAudioChunkViaWs = useCallback(
+    async (blob) => {
+      try {
+        const buffer = await blob.arrayBuffer();
+        const base64Chunk = bufferToBase64(buffer);
+        return sendWsPayload({ type: "audio_chunk", data: base64Chunk });
+      } catch (chunkError) {
+        setVoiceTransport("http");
+        return false;
+      }
+    },
+    [sendWsPayload, setVoiceTransport]
+  );
+
+  const handleWsPayload = useCallback(
+    (payload) => {
+      if (!payload || typeof payload !== "object") {
+        return;
+      }
+
+      switch (payload.type) {
+        case "session_started":
+          setVoiceSessionId(payload.sessionId ?? null);
+          break;
+        case "transcript":
+          if (payload.final && payload.text) {
+            setChatHistory((prev) => [
+              ...prev,
+              { id: `voice-user-${Date.now()}`, role: "user", content: payload.text },
+            ]);
+            updateVoicePhase("processing");
+          } else if (payload.text) {
+            setVoiceStatus(`Sto trascrivendo: ${payload.text}`);
+          }
+          break;
+        case "assistant_text":
+          if (payload.answer) {
+            setChatHistory((prev) => [
+              ...prev,
+              {
+                id: `assistant-${Date.now()}`,
+                role: "assistant",
+                content: payload.answer,
+                sources: payload.sources ?? [],
+              },
+            ]);
+          }
+          updateVoicePhase(payload.audioStreaming ? "speaking" : "idle");
+          setIsVoiceProcessing(false);
+          break;
+        case "assistant_audio_chunk":
+          if (payload.data) {
+            audioStreamerRef.current?.enqueue(payload.data);
+            updateVoicePhase("speaking");
+          }
+          break;
+        case "assistant_audio_end":
+          audioStreamerRef.current?.markStreamComplete(() => {
+            updateVoicePhase("idle");
+            setIsVoiceProcessing(false);
+          });
+          break;
+        case "assistant_paused":
+          audioStreamerRef.current?.flush();
+          updateVoicePhase(
+            "idle",
+            "Risposta interrotta, pronto a ricevere una nuova domanda."
+          );
+          break;
+        case "error":
+          setError(payload.message || "Errore nella modalità vocale realtime.");
+          updateVoicePhase("idle");
+          setIsVoiceProcessing(false);
+          break;
+        default:
+          break;
+      }
+    },
+    [setChatHistory, setError, setIsVoiceProcessing, updateVoicePhase]
+  );
+
   useEffect(() => {
     if (chatPaneRef.current) {
       chatPaneRef.current.scrollTop = chatPaneRef.current.scrollHeight;
@@ -48,6 +277,74 @@ const InfoPointPage = () => {
       chatEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [chatHistory, assistantStarted]);
+
+  useEffect(() => {
+    audioStreamerRef.current = new AudioStreamer();
+
+    return () => {
+      audioStreamerRef.current?.flush();
+      audioStreamerRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!assistantStarted) {
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      setVoiceSessionId(null);
+      setVoiceTransport("http");
+      return;
+    }
+
+    if (!voiceWsUrl || typeof window === "undefined") {
+      return;
+    }
+
+    let isActive = true;
+
+    try {
+      const ws = new WebSocket(`${voiceWsUrl}?t=${Date.now()}`);
+      wsRef.current = ws;
+
+      ws.onopen = () => {
+        if (!isActive) return;
+        setVoiceTransport("ws");
+        updateVoicePhase("idle");
+      };
+
+      ws.onmessage = (event) => {
+        if (!isActive) return;
+        try {
+          const payload = JSON.parse(event.data);
+          handleWsPayload(payload);
+        } catch (messageError) {
+          // ignore malformed payloads
+        }
+      };
+
+      ws.onerror = () => {
+        if (!isActive) return;
+        setVoiceTransport("http");
+      };
+
+      ws.onclose = () => {
+        if (!isActive) return;
+        wsRef.current = null;
+        setVoiceSessionId(null);
+        setVoiceTransport((prev) => (prev === "ws" ? "http" : prev));
+        updateVoicePhase("idle");
+      };
+
+      return () => {
+        isActive = false;
+        ws.close();
+      };
+    } catch (connectionError) {
+      setVoiceTransport("http");
+    }
+  }, [assistantStarted, handleWsPayload, updateVoicePhase, voiceWsUrl]);
 
   const handleStartAssistant = () => {
     if (!assistantStarted) {
@@ -135,37 +432,88 @@ const InfoPointPage = () => {
   );
 
   const handleToggleRecording = async () => {
+    if (!assistantStarted) {
+      return;
+    }
+
+    if (!isRecording && voicePhase === "speaking") {
+      audioStreamerRef.current?.flush();
+      sendWsPayload({ type: "user_cancel" });
+    }
+
     if (isRecording) {
+      if (recordingModeRef.current === "ws") {
+        updateVoicePhase("processing");
+        setIsVoiceProcessing(true);
+      }
       mediaRecorderRef.current?.stop();
-      setIsRecording(false);
-      setVoiceStatus("Sto elaborando la tua registrazione...");
       return;
     }
 
     try {
       setError("");
-      setVoiceStatus("Sto ascoltando...");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
+      const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const canUseStreaming =
+        voiceTransport === "ws" &&
+        wsRef.current &&
+        wsRef.current.readyState === WebSocket.OPEN &&
+        voiceSessionId;
+
+      recordingModeRef.current = canUseStreaming ? "ws" : "http";
+      const recorder = new MediaRecorder(audioStream);
       audioChunksRef.current = [];
 
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+      recorder.ondataavailable = async (event) => {
+        if (!event.data || event.data.size === 0) {
+          return;
+        }
+
+        if (recordingModeRef.current === "ws") {
+          const sent = await sendAudioChunkViaWs(event.data);
+          if (!sent) {
+            audioChunksRef.current.push(event.data);
+          }
+        } else {
           audioChunksRef.current.push(event.data);
         }
       };
 
       recorder.onstop = () => {
-        stream.getTracks().forEach((track) => track.stop());
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        sendVoiceMessage(audioBlob);
+        audioStream.getTracks().forEach((track) => track.stop());
+        setIsRecording(false);
+
+        if (recordingModeRef.current === "ws") {
+          updateVoicePhase("processing");
+          setIsVoiceProcessing(true);
+          const sent = sendWsPayload({ type: "user_stop" });
+          if (!sent && audioChunksRef.current.length > 0) {
+            const fallbackBlob = new Blob(audioChunksRef.current, {
+              type: "audio/webm",
+            });
+            sendVoiceMessage(fallbackBlob);
+          }
+        } else if (audioChunksRef.current.length > 0) {
+          const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+          sendVoiceMessage(audioBlob);
+        }
+
+        audioChunksRef.current = [];
       };
 
-      recorder.start();
+      recorder.start(canUseStreaming ? 200 : undefined);
       mediaRecorderRef.current = recorder;
       setIsRecording(true);
+
+      if (canUseStreaming) {
+        updateVoicePhase("listening");
+      } else {
+        updateVoicePhase(
+          "listening",
+          "Modalità realtime non disponibile: registrazione classica avviata."
+        );
+      }
     } catch (recorderError) {
-      setVoiceStatus("");
+      updateVoicePhase("idle");
       setError(
         recorderError instanceof Error
           ? recorderError.message
@@ -175,9 +523,13 @@ const InfoPointPage = () => {
   };
 
   const sendVoiceMessage = async (blob) => {
+    if (!blob) {
+      return;
+    }
+
     setIsRecording(false);
     setIsVoiceProcessing(true);
-    setVoiceStatus("Sto trascrivendo e generando la risposta...");
+    updateVoicePhase("processing");
 
     const formData = new FormData();
     formData.append("audio", blob, "input.webm");
@@ -206,18 +558,20 @@ const InfoPointPage = () => {
       ]);
 
       if (data.audio) {
-        const audio = new Audio(`data:audio/mp3;base64,${data.audio}`);
-        audio.play().catch(() => {
-          /* ignore autoplay issues */
+        updateVoicePhase("speaking");
+        audioStreamerRef.current?.flush();
+        audioStreamerRef.current?.enqueue(data.audio);
+        audioStreamerRef.current?.markStreamComplete(() => {
+          updateVoicePhase("idle", "Risposta pronta.");
         });
+      } else {
+        updateVoicePhase("idle", "Risposta pronta.");
       }
-      setVoiceStatus("Risposta pronta.");
     } catch (voiceError) {
       setError(voiceError.message);
-      setVoiceStatus("");
+      updateVoicePhase("idle");
     } finally {
       setIsVoiceProcessing(false);
-      setTimeout(() => setVoiceStatus(""), 2500);
     }
   };
 

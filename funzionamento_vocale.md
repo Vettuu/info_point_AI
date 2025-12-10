@@ -68,3 +68,25 @@ L’assistente Info Point AI è stato esteso con una pipeline voce → voce che 
 - **Log** → `storage/logs/laravel.log` registra ogni richiesta vocale e gli eventuali errori STT/TTS.
 
 Con questa architettura la modalità vocale rimane un layer opzionale: se l’audio o il TTS falliscono, il flusso testuale continua a funzionare identico all’MVP. Gradi ulteriori (nuove voci, lingue o modelli) richiedono solo di aggiornare le variabili in `.env` e i servizi dedicati.  
+
+## Esecuzione & deploy
+
+- **Avvio locale**  
+  - Backend: `cd backend && ./start_octane.sh --watch` (Octane + Swoole sulla porta 8000 con limiti PHP forzati).  
+  - Frontend: `cd frontend && npm run dev`.  
+  - WebSocket: `NEXT_PUBLIC_VOICE_WS=ws://127.0.0.1:8000/ws/voice-assistant`.
+
+- **Aggiornamento knowledge**  
+  - `php artisan app:build-knowledge-index` ogni volta che viene modificato qualcosa in `resources/knowledge`.
+
+- **CORS / domini**  
+  - Variabile `FRONTEND_ORIGINS` (es. `https://totem.evento.it,https://backup.evento.it`). Il backend accetta solo le origini presenti.
+
+- **Log e monitoraggio**  
+  - Backend: `tail -f backend/storage/logs/laravel.log`. Qui trovi info su STT/TTS, errori di pipeline e sessioni WS.  
+  - Frontend: console browser per eventuali errori WebSocket/MediaRecorder.
+
+- **Produzione**  
+  - Usa `./start_octane.sh` (senza `--watch`) dietro reverse proxy.  
+  - Mantieni attivi processi separati per build frontend (`npm run build && npm run start`) e per generazione knowledge.  
+  - Configura supervisione (systemd, pm2 o simili) per riavviare Octane e Next in caso di crash.

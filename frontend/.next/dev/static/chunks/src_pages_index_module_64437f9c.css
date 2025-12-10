@@ -163,7 +163,7 @@
   transition: opacity .48s, transform .48s cubic-bezier(.22, 1, .36, 1);
   display: flex;
   position: absolute;
-  bottom: clamp(20px, 6vh, 60px);
+  bottom: clamp(20px, 3vh, 60px);
   left: 50%;
   transform: translate(-50%, 40px);
 }
