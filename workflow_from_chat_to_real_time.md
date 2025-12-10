@@ -303,6 +303,7 @@ $connection->onClose(fn () => SessionManager->destroy(...));
 #### Step 10 – Esecuzione pratica
 1. **Script di avvio**  
    - Creato `backend/start_octane.sh`: applica i limiti PHP tramite variabili (`UPLOAD_MAX_FILESIZE`, `POST_MAX_SIZE`, ecc.) e lancia `php artisan octane:start --server=swoole --host=0.0.0.0 --port=8000`. Usalo in dev con `--watch` e in produzione senza flag extra.
+   - Nuovo comando `php artisan voice:ws-server --host=127.0.0.1 --port=9000` che avvia il server WebSocket dedicato alla modalità realtime (usa Swoole puro).
 2. **CORS configurabile**  
    - Nuova variabile `FRONTEND_ORIGINS` in `.env/.env.example`.  
    - `config/cors.php` ora legge l’elenco separato da virgole e include anche il percorso `ws/*` per le WebSocket.

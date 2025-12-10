@@ -137,7 +137,7 @@ const InfoPointPage = () => {
   const voiceAssistantEndpoint =
     process.env.NEXT_PUBLIC_VOICE_API ?? "http://localhost:8000/api/voice-assistant";
   const voiceWsUrl =
-    process.env.NEXT_PUBLIC_VOICE_WS ?? "ws://127.0.0.1:8000/ws/voice-assistant";
+    process.env.NEXT_PUBLIC_VOICE_WS ?? "ws://127.0.0.1:9000/ws/voice-assistant";
 
   const pageClasses = useMemo(
     () =>

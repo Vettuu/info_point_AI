@@ -72,9 +72,10 @@ Con questa architettura la modalità vocale rimane un layer opzionale: se l’au
 ## Esecuzione & deploy
 
 - **Avvio locale**  
-  - Backend: `cd backend && ./start_octane.sh --watch` (Octane + Swoole sulla porta 8000 con limiti PHP forzati).  
+  - Backend HTTP: `cd backend && ./start_octane.sh --watch` (Octane + Swoole sulla porta 8000 con limiti PHP forzati).  
+  - Server WebSocket: `cd backend && php artisan voice:ws-server --host=127.0.0.1 --port=9000` (espone `ws://127.0.0.1:9000/ws/voice-assistant`).  
   - Frontend: `cd frontend && npm run dev`.  
-  - WebSocket: `NEXT_PUBLIC_VOICE_WS=ws://127.0.0.1:8000/ws/voice-assistant`.
+  - WebSocket client: `NEXT_PUBLIC_VOICE_WS=ws://127.0.0.1:9000/ws/voice-assistant`.
 
 - **Aggiornamento knowledge**  
   - `php artisan app:build-knowledge-index` ogni volta che viene modificato qualcosa in `resources/knowledge`.

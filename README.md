@@ -44,7 +44,14 @@ cd backend
 ./start_octane.sh --watch
 ```
 
-Terminale 2 – frontend Next.js:
+Terminale 2 – server WebSocket voce:
+
+```bash
+cd backend
+php artisan voice:ws-server --host=127.0.0.1 --port=9000
+```
+
+Terminale 3 – frontend Next.js:
 
 ```bash
 cd frontend
@@ -70,10 +77,9 @@ Frontend (`frontend/.env.local`):
 ### Deploy / produzione
 
 1. Imposta `FRONTEND_ORIGINS` con il dominio reale (es. `https://infopoint.example.com`).
-2. Avvia il backend con `./start_octane.sh` dietro un reverse proxy (Nginx/Apache) che inoltri:
-   - `/api/*` → `http://127.0.0.1:8000`
-   - `/ws/*` → `http://127.0.0.1:8000` (WebSocket)
-   - `/docs/*` → `http://127.0.0.1:8000`
+2. Avvia il backend con `./start_octane.sh` e il server WebSocket con `php artisan voice:ws-server --host=127.0.0.1 --port=9000`, entrambi dietro reverse proxy (Nginx/Apache) che inoltri:
+   - `/api/*` + `/docs/*` → `http://127.0.0.1:8000`
+   - `/ws/voice-assistant` → `ws://127.0.0.1:9000/ws/voice-assistant`
 3. Serve il frontend Next.js statico (build `npm run build && npm run start`) o tramite Vercel.
 4. Monitora `storage/logs/laravel.log` per le richieste vocali e `npm run build` per eventuali errori UI.
 

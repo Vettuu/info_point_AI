@@ -174,7 +174,7 @@ const InfoPointPage = ()=>{
     const audioStreamerRef = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useRef"])(null);
     const assistantEndpoint = process.env.NEXT_PUBLIC_ASSISTANT_API ?? "http://localhost:8000/api/assistant";
     const voiceAssistantEndpoint = process.env.NEXT_PUBLIC_VOICE_API ?? "http://localhost:8000/api/voice-assistant";
-    const voiceWsUrl = process.env.NEXT_PUBLIC_VOICE_WS ?? "ws://127.0.0.1:8000/ws/voice-assistant";
+    const voiceWsUrl = process.env.NEXT_PUBLIC_VOICE_WS ?? "ws://127.0.0.1:9000/ws/voice-assistant";
     const pageClasses = (0, __TURBOPACK__imported__module__$5b$externals$5d2f$react__$5b$external$5d$__$28$react$2c$__cjs$29$__["useMemo"])(()=>[
             __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$ssr$5d$__$28$css__module$29$__["default"].infopointPage,
             assistantStarted ? __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$pages$2f$index$2e$module$2e$css__$5b$ssr$5d$__$28$css__module$29$__["default"].pageStarted : ""
